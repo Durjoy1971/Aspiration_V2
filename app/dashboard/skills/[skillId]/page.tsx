@@ -83,8 +83,11 @@ export default function SkillWorkspacePage() {
             loadedVideos = await res.json();
           }
         } else {
-          // Fetch matching search results using skill name/keyword
-          const queryParam = encodeURIComponent(skillData.name);
+          // Fetch matching search results using skill keywords, fallback to skill name
+          const searchQuery = Array.isArray(skillData.keywords) && skillData.keywords.length > 0
+            ? skillData.keywords.join(' OR ')
+            : skillData.name;
+          const queryParam = encodeURIComponent(searchQuery);
           const res = await fetch(`/api/youtube/search?query=${queryParam}&skillId=${skillData.id}`);
           if (res.ok) {
             loadedVideos = await res.json();

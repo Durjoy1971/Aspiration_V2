@@ -259,7 +259,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Database Empty Seeder Prompt (Massive WOW Factor) */}
-        {!loadingData && categories.length === 0 && (
+        {!loadingData && categories.length === 0 && (user?.role === 'admin' || user?.role === 'superAdmin') && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 sm:p-8 text-center max-w-xl mx-auto shadow-sm">
             <h3 className="text-lg font-bold text-amber-800 mb-2">
               🗃️ Empty Datastore Detected

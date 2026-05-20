@@ -18,8 +18,17 @@ function getServiceAccount() {
 
   try {
     // Parse stringified JSON service account key
-    return JSON.parse(serviceAccountKey);
+    const parsed = JSON.parse(serviceAccountKey);
+    console.log('Service account key parsed successfully, project:', parsed.project_id);
+
+    // Fix the private key: replace literal \n with actual newlines
+    if (parsed.private_key) {
+      parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+    }
+
+    return parsed;
   } catch (error) {
+    console.error('Make sure the environment variable is a valid JSON string with proper escaping for newlines in the private key.');
     throw new Error(
       `Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY JSON string: ${(error as Error).message}`
     );

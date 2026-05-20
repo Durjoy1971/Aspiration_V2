@@ -164,4 +164,27 @@ test.describe('Curated Video Manager E2E', () => {
     // Modal should be closed
     await expect(page.getByText('Manage Curated Videos')).not.toBeVisible();
   });
+
+  test('should display curated videos on learner skill page', async ({ page }) => {
+    await setE2EUser(page, 'admin');
+    await page.goto('/dashboard/admin/skills');
+
+    const manageVideosButton = page.getByText('Manage Videos').first();
+    await manageVideosButton.click();
+
+    // Add a real YouTube video ID
+    const videoIdInput = page.getByPlaceholder('e.g. dQw4w9WgXcQ');
+    await videoIdInput.fill('dQw4w9WgXcQ');
+    await page.getByText('Add').click();
+    await expect(page.getByText('dQw4w9WgXcQ')).toBeVisible({ timeout: 5000 });
+
+    // Preview as learner
+    await page.getByText('👁️ Preview as Learner').click();
+    await expect(page).toHaveURL(/\/dashboard\/skills\/.+/);
+
+    // Verify videos are displayed on learner page
+    await expect(page.getByText('Curriculum Tutorials')).toBeVisible();
+    // Video cards should be visible
+    await expect(page.locator('[data-testid="video-card"]').first()).toBeVisible({ timeout: 5000 });
+  });
 });

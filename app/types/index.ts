@@ -12,6 +12,7 @@ export interface Skill {
   description: string;
   order: number;
   videoIds: string[];
+  keywords: string[];
 }
 
 export type VideoStatus = 'not_started' | 'in_progress' | 'completed';

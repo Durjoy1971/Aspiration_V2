@@ -21,6 +21,14 @@ export default function AdminCategoriesPage() {
   const [catOrder, setCatOrder] = useState<number>(1);
   const [actionInProgress, setActionInProgress] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [successMsg, setSuccessMsg] = useState<string>('');
+
+  // Edit modal state
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editCatName, setEditCatName] = useState<string>('');
+  const [editCatDesc, setEditCatDesc] = useState<string>('');
+  const [editCatOrder, setEditCatOrder] = useState<number>(1);
+  const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
 
   const fetchCategories = async () => {
     try {
@@ -71,9 +79,20 @@ export default function AdminCategoriesPage() {
     };
   }, [user]);
 
+  // Auto-dismiss success messages after 3 seconds
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => {
+        setSuccessMsg('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setSuccessMsg('');
 
     const trimmedId = catId.trim().toLowerCase();
     const trimmedName = catName.trim();
@@ -108,6 +127,7 @@ export default function AdminCategoriesPage() {
       setCatOrder(categories.length + 2);
 
       await fetchCategories();
+      setSuccessMsg('Category created successfully!');
     } catch (err: unknown) {
       console.error('Failed to add category:', err);
       setErrorMsg(err instanceof Error ? err.message : 'Failed to save category.');
@@ -123,12 +143,109 @@ export default function AdminCategoriesPage() {
 
     try {
       setActionInProgress(true);
+      setErrorMsg('');
+      setSuccessMsg('');
       const categoryDocRef = doc(db, 'categories', id);
       await deleteDoc(categoryDocRef);
       await fetchCategories();
+      setSuccessMsg('Category deleted successfully!');
     } catch (err: unknown) {
       console.error('Failed to delete category:', err);
-      alert(err instanceof Error ? err.message : 'Failed to delete category.');
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to delete category.');
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setEditCatName(category.name);
+    setEditCatDesc(category.description);
+    setEditCatOrder(category.order);
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+
+    try {
+      setActionInProgress(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+      const updatedCategory: Category = {
+        id: editingCategory.id,
+        name: editCatName.trim(),
+        description: editCatDesc.trim(),
+        order: editCatOrder,
+      };
+
+      const categoryDocRef = doc(db, 'categories', editingCategory.id);
+      await setDoc(categoryDocRef, updatedCategory, { merge: true });
+
+      setEditModalOpen(false);
+      setEditingCategory(null);
+      await fetchCategories();
+      setSuccessMsg('Category updated successfully!');
+    } catch (err: unknown) {
+      console.error('Failed to update category:', err);
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to update category.');
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setEditingCategory(null);
+    setEditCatName('');
+    setEditCatDesc('');
+    setEditCatOrder(1);
+  };
+
+  const handleMoveCategoryUp = async (index: number) => {
+    if (index === 0) return;
+    const newCategories = [...categories];
+    [newCategories[index - 1], newCategories[index]] = [newCategories[index], newCategories[index - 1]];
+
+    try {
+      setActionInProgress(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+      // Update order values in Firestore
+      for (let i = 0; i < newCategories.length; i++) {
+        const catRef = doc(db, 'categories', newCategories[i].id);
+        await setDoc(catRef, { order: i + 1 }, { merge: true });
+      }
+      await fetchCategories();
+      setSuccessMsg('Category moved up successfully!');
+    } catch (err: unknown) {
+      console.error('Failed to reorder category:', err);
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to reorder category.');
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  const handleMoveCategoryDown = async (index: number) => {
+    if (index === categories.length - 1) return;
+    const newCategories = [...categories];
+    [newCategories[index], newCategories[index + 1]] = [newCategories[index + 1], newCategories[index]];
+
+    try {
+      setActionInProgress(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+      // Update order values in Firestore
+      for (let i = 0; i < newCategories.length; i++) {
+        const catRef = doc(db, 'categories', newCategories[i].id);
+        await setDoc(catRef, { order: i + 1 }, { merge: true });
+      }
+      await fetchCategories();
+      setSuccessMsg('Category moved down successfully!');
+    } catch (err: unknown) {
+      console.error('Failed to reorder category:', err);
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to reorder category.');
     } finally {
       setActionInProgress(false);
     }
@@ -163,6 +280,11 @@ export default function AdminCategoriesPage() {
           {errorMsg && (
             <div className="p-3 mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold">
               ⚠️ {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="p-3 mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold">
+              ✅ {successMsg}
             </div>
           )}
 
@@ -244,12 +366,12 @@ export default function AdminCategoriesPage() {
               <p className="text-sm text-[#4a5568] italic">No categories found in datastore. Create one on the left!</p>
             ) : (
               <div className="flex flex-col gap-4">
-                {categories.map((category) => (
+                {categories.map((category, index) => (
                   <div
                     key={category.id}
                     className="p-4 border border-[#cccc]/40 rounded-xl hover:border-[#38b2ac]/40 transition-all flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-[#f4f6f9]/50"
                   >
-                    <div>
+                    <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-black text-[#2d3748]">{category.name}</span>
                         <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono">
@@ -264,13 +386,38 @@ export default function AdminCategoriesPage() {
                       </p>
                     </div>
 
-                    <button
-                      onClick={() => handleDeleteCategory(category.id)}
-                      disabled={actionInProgress}
-                      className="text-xs bg-white hover:bg-rose-600 hover:text-white text-rose-600 font-bold p-2 px-4 rounded-lg border border-rose-200 transition-all cursor-pointer self-start sm:self-center"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex gap-2 self-start sm:self-center">
+                      <button
+                        onClick={() => handleMoveCategoryUp(index)}
+                        disabled={actionInProgress || index === 0}
+                        className="text-xs bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-2 px-3 rounded-lg border border-[#cccc] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Move up"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => handleMoveCategoryDown(index)}
+                        disabled={actionInProgress || index === categories.length - 1}
+                        className="text-xs bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-2 px-3 rounded-lg border border-[#cccc] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Move down"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        onClick={() => handleEditCategory(category)}
+                        disabled={actionInProgress}
+                        className="text-xs bg-white hover:bg-[#38b2ac] hover:text-white text-[#38b2ac] font-bold p-2 px-4 rounded-lg border border-[#38b2ac]/40 transition-all cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(category.id)}
+                        disabled={actionInProgress}
+                        className="text-xs bg-white hover:bg-rose-600 hover:text-white text-rose-600 font-bold p-2 px-4 rounded-lg border border-rose-200 transition-all cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -278,6 +425,75 @@ export default function AdminCategoriesPage() {
           </div>
         </div>
       </main>
+
+      {/* Edit Modal */}
+      {editModalOpen && editingCategory && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-lg font-black text-[#2d3748] mb-4">Edit Category</h3>
+
+            <form onSubmit={handleSaveEdit} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#4a5568] mb-1">
+                  Category Name
+                </label>
+                <input
+                  type="text"
+                  value={editCatName}
+                  onChange={(e) => setEditCatName(e.target.value)}
+                  className="w-full p-2.5 border border-[#cccc] rounded-xl text-sm bg-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#4a5568] mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={editCatDesc}
+                  onChange={(e) => setEditCatDesc(e.target.value)}
+                  rows={3}
+                  className="w-full p-2.5 border border-[#cccc] rounded-xl text-sm bg-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#4a5568] mb-1">
+                  Order Value
+                </label>
+                <input
+                  type="number"
+                  value={editCatOrder}
+                  onChange={(e) => setEditCatOrder(Number(e.target.value))}
+                  min={1}
+                  className="w-full p-2.5 border border-[#cccc] rounded-xl text-sm bg-white"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleCloseEditModal}
+                  disabled={actionInProgress}
+                  className="flex-1 bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-3 rounded-xl transition-all cursor-pointer text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionInProgress}
+                  className="flex-1 bg-[#38b2ac] hover:bg-[#2d8a83] text-white font-bold p-3 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  {actionInProgress ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

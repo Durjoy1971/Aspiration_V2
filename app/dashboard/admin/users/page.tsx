@@ -3,8 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../store/useAuthStore';
-import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/clientApp';
+import { auth } from '../../../lib/firebase/clientApp';
 
 interface UserDoc {
   uid: string;
@@ -66,8 +67,31 @@ export default function AdminUsersPage() {
       setErrorMsg('');
       setSuccessMsg('');
 
-      const userDocRef = doc(db, 'users', targetUid);
-      await updateDoc(userDocRef, { role: newRole });
+      // Get the current user's ID token from Firebase auth
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) {
+        throw new Error('User not authenticated');
+      }
+
+      const idToken = await firebaseUser.getIdToken();
+
+      // Call the secure API route
+      const response = await fetch('/api/admin/set-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          targetUserId: targetUid,
+          newRole: newRole,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update user role');
+      }
 
       setSuccessMsg(`Successfully updated user permissions to ${newRole}!`);
       await fetchUsers();

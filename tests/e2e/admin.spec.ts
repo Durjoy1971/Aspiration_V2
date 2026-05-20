@@ -94,4 +94,46 @@ test.describe('Admin Control Panels Security E2E', () => {
     await expect(page.locator('text=Role & Users Panel')).toBeVisible();
     await expect(page.locator('text=Open User Manager')).toBeVisible();
   });
+
+  test('should allow admin to create a category', async ({ page }) => {
+    await setE2EUser(page, 'admin');
+    await page.goto('/dashboard/admin/categories');
+
+    // Fill in category form
+    await page.fill('input[placeholder="e.g. frontend"]', 'e2e-test-category');
+    await page.fill('input[placeholder="e.g. Frontend Development"]', 'E2E Test Category');
+    await page.fill('textarea[placeholder="Brief description of this learning pathway..."]', 'Test category for E2E');
+    await page.fill('input[type="number"]', '1');
+
+    // Submit form
+    await page.click('button:has-text("Save Category")');
+
+    // Wait for success message
+    await expect(page.locator('text=Category created successfully!')).toBeVisible();
+  });
+
+  test('should allow admin to create a skill', async ({ page }) => {
+    await setE2EUser(page, 'admin');
+    await page.goto('/dashboard/admin/skills');
+
+    // Select category (assuming there's at least one)
+    const categorySelect = page.locator('select').first();
+    const optionCount = await categorySelect.locator('option').count();
+    if (optionCount > 0) {
+      await categorySelect.selectOption({ index: 0 });
+
+      // Fill in skill form
+      await page.fill('input[placeholder="e.g. react-basics"]', 'e2e-test-skill');
+      await page.fill('input[placeholder="e.g. React Fundamentals"]', 'E2E Test Skill');
+      await page.fill('textarea[placeholder="Core concepts details..."]', 'Test skill for E2E');
+      await page.fill('input[placeholder="e.g. react, components, hooks"]', 'e2e,test,skill');
+      await page.fill('input[type="number"]', '1');
+
+      // Submit form
+      await page.click('button:has-text("Save Skill")');
+
+      // Wait for success message
+      await expect(page.locator('text=Skill created successfully!')).toBeVisible();
+    }
+  });
 });

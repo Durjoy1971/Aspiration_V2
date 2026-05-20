@@ -20,15 +20,25 @@ export default function AdminSkillsPage() {
   const [selectedCatId, setSelectedCatId] = useState<string>('');
   const [skillName, setSkillName] = useState<string>('');
   const [skillDesc, setSkillDesc] = useState<string>('');
+  const [skillKeywords, setSkillKeywords] = useState<string>('');
   const [skillOrder, setSkillOrder] = useState<number>(1);
   const [actionInProgress, setActionInProgress] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [successMsg, setSuccessMsg] = useState<string>('');
 
   // Video manager state
   const [selectedSkillForVideos, setSelectedSkillForVideos] = useState<Skill | null>(null);
   const [newVideoId, setNewVideoId] = useState<string>('');
   const [videoManagerLoading, setVideoManagerLoading] = useState<boolean>(false);
   const [videoManagerError, setVideoManagerError] = useState<string>('');
+
+  // Edit modal state
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+  const [editSkillName, setEditSkillName] = useState<string>('');
+  const [editSkillDesc, setEditSkillDesc] = useState<string>('');
+  const [editSkillKeywords, setEditSkillKeywords] = useState<string>('');
+  const [editSkillOrder, setEditSkillOrder] = useState<number>(1);
+  const [editSkillModalOpen, setEditSkillModalOpen] = useState<boolean>(false);
 
   const fetchData = async () => {
     try {
@@ -98,9 +108,20 @@ export default function AdminSkillsPage() {
     };
   }, [user]);
 
+  // Auto-dismiss success messages after 3 seconds
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => {
+        setSuccessMsg('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
   const handleAddSkill = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setSuccessMsg('');
 
     const trimmedId = skillId.trim().toLowerCase();
     const trimmedName = skillName.trim();
@@ -118,6 +139,11 @@ export default function AdminSkillsPage() {
 
     try {
       setActionInProgress(true);
+      const keywordsArray = skillKeywords
+        .split(',')
+        .map(k => k.trim())
+        .filter(Boolean);
+
       const newSkill: Skill = {
         id: trimmedId,
         categoryId: selectedCatId,
@@ -125,6 +151,7 @@ export default function AdminSkillsPage() {
         description: trimmedDesc,
         order: Number(skillOrder),
         videoIds: [],
+        keywords: keywordsArray,
       };
 
       const skillDocRef = doc(db, 'skills', trimmedId);
@@ -134,9 +161,11 @@ export default function AdminSkillsPage() {
       setSkillId('');
       setSkillName('');
       setSkillDesc('');
+      setSkillKeywords('');
       setSkillOrder(skills.length + 2);
 
       await fetchData();
+      setSuccessMsg('Skill created successfully!');
     } catch (err: unknown) {
       console.error('Failed to add skill:', err);
       setErrorMsg(err instanceof Error ? err.message : 'Failed to save skill.');
@@ -152,12 +181,119 @@ export default function AdminSkillsPage() {
 
     try {
       setActionInProgress(true);
+      setErrorMsg('');
+      setSuccessMsg('');
       const skillDocRef = doc(db, 'skills', id);
       await deleteDoc(skillDocRef);
       await fetchData();
+      setSuccessMsg('Skill deleted successfully!');
     } catch (err: unknown) {
       console.error('Failed to delete skill:', err);
-      alert(err instanceof Error ? err.message : 'Failed to delete skill.');
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to delete skill.');
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  const handleEditSkill = (skill: Skill) => {
+    setEditingSkill(skill);
+    setEditSkillName(skill.name);
+    setEditSkillDesc(skill.description);
+    setEditSkillKeywords(Array.isArray(skill.keywords) ? skill.keywords.join(', ') : '');
+    setEditSkillOrder(skill.order);
+    setEditSkillModalOpen(true);
+  };
+
+  const handleSaveSkillEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSkill) return;
+
+    try {
+      setActionInProgress(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+      const keywordsArray = editSkillKeywords
+        .split(',')
+        .map(k => k.trim())
+        .filter(Boolean);
+
+      const updatedSkill: Skill = {
+        id: editingSkill.id,
+        categoryId: editingSkill.categoryId,
+        name: editSkillName.trim(),
+        description: editSkillDesc.trim(),
+        order: editSkillOrder,
+        videoIds: editingSkill.videoIds,
+        keywords: keywordsArray,
+      };
+
+      const skillDocRef = doc(db, 'skills', editingSkill.id);
+      await setDoc(skillDocRef, updatedSkill, { merge: true });
+
+      setEditSkillModalOpen(false);
+      setEditingSkill(null);
+      await fetchData();
+      setSuccessMsg('Skill updated successfully!');
+    } catch (err: unknown) {
+      console.error('Failed to update skill:', err);
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to update skill.');
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  const handleCloseSkillEditModal = () => {
+    setEditSkillModalOpen(false);
+    setEditingSkill(null);
+    setEditSkillName('');
+    setEditSkillDesc('');
+    setEditSkillKeywords('');
+    setEditSkillOrder(1);
+  };
+
+  const handleMoveSkillUp = async (index: number) => {
+    if (index === 0) return;
+    const newSkills = [...skills];
+    [newSkills[index - 1], newSkills[index]] = [newSkills[index], newSkills[index - 1]];
+
+    try {
+      setActionInProgress(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+      // Update order values in Firestore
+      for (let i = 0; i < newSkills.length; i++) {
+        const skillRef = doc(db, 'skills', newSkills[i].id);
+        await setDoc(skillRef, { order: i + 1 }, { merge: true });
+      }
+      await fetchData();
+      setSuccessMsg('Skill moved up successfully!');
+    } catch (err: unknown) {
+      console.error('Failed to reorder skill:', err);
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to reorder skill.');
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  const handleMoveSkillDown = async (index: number) => {
+    if (index === skills.length - 1) return;
+    const newSkills = [...skills];
+    [newSkills[index], newSkills[index + 1]] = [newSkills[index + 1], newSkills[index]];
+
+    try {
+      setActionInProgress(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+      // Update order values in Firestore
+      for (let i = 0; i < newSkills.length; i++) {
+        const skillRef = doc(db, 'skills', newSkills[i].id);
+        await setDoc(skillRef, { order: i + 1 }, { merge: true });
+      }
+      await fetchData();
+      setSuccessMsg('Skill moved down successfully!');
+    } catch (err: unknown) {
+      console.error('Failed to reorder skill:', err);
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to reorder skill.');
     } finally {
       setActionInProgress(false);
     }
@@ -318,6 +454,11 @@ export default function AdminSkillsPage() {
               ⚠️ {errorMsg}
             </div>
           )}
+          {successMsg && (
+            <div className="p-3 mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold">
+              ✅ {successMsg}
+            </div>
+          )}
 
           <form onSubmit={handleAddSkill} className="flex flex-col gap-4">
             <div>
@@ -388,6 +529,20 @@ export default function AdminSkillsPage() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-[#4a5568] mb-1">
+                Keywords (comma-separated)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. react, components, hooks"
+                value={skillKeywords}
+                onChange={(e) => setSkillKeywords(e.target.value)}
+                className="w-full p-2.5 border border-[#cccc] rounded-xl text-sm bg-white"
+              />
+              <p className="text-xs text-[#4a5568] mt-1">Used for YouTube search when no curated videos are set</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#4a5568] mb-1">
                 Order Value
               </label>
               <input
@@ -421,14 +576,14 @@ export default function AdminSkillsPage() {
               <p className="text-sm text-[#4a5568] italic">No skills found. Create one using the form on the left!</p>
             ) : (
               <div className="flex flex-col gap-4">
-                {skills.map((skill) => {
+                {skills.map((skill, index) => {
                   const parentCatName = categories.find((c) => c.id === skill.categoryId)?.name || skill.categoryId;
                   return (
                     <div
                       key={skill.id}
                       className="p-4 border border-[#cccc]/40 rounded-xl hover:border-[#5995fd]/40 transition-all flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-[#f4f6f9]/50"
                     >
-                      <div>
+                      <div className="flex-1">
                         <div className="flex items-center flex-wrap gap-2">
                           <span className="text-sm font-black text-[#2d3748]">{skill.name}</span>
                           <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono">
@@ -447,6 +602,29 @@ export default function AdminSkillsPage() {
                       </div>
 
                       <div className="flex gap-2 self-start sm:self-center">
+                        <button
+                          onClick={() => handleMoveSkillUp(index)}
+                          disabled={actionInProgress || index === 0}
+                          className="text-xs bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-2 px-3 rounded-lg border border-[#cccc] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          onClick={() => handleMoveSkillDown(index)}
+                          disabled={actionInProgress || index === skills.length - 1}
+                          className="text-xs bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-2 px-3 rounded-lg border border-[#cccc] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move down"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          onClick={() => handleEditSkill(skill)}
+                          disabled={actionInProgress}
+                          className="text-xs bg-white hover:bg-[#5995fd] hover:text-white text-[#5995fd] font-bold p-2 px-4 rounded-lg border border-[#5995fd]/40 transition-all cursor-pointer"
+                        >
+                          Edit
+                        </button>
                         <button
                           onClick={() => handleOpenVideoManager(skill)}
                           disabled={actionInProgress}
@@ -604,6 +782,88 @@ export default function AdminSkillsPage() {
                 Done
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Skill Edit Modal */}
+      {editSkillModalOpen && editingSkill && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-lg font-black text-[#2d3748] mb-4">Edit Skill</h3>
+
+            <form onSubmit={handleSaveSkillEdit} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#4a5568] mb-1">
+                  Skill Name
+                </label>
+                <input
+                  type="text"
+                  value={editSkillName}
+                  onChange={(e) => setEditSkillName(e.target.value)}
+                  className="w-full p-2.5 border border-[#cccc] rounded-xl text-sm bg-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#4a5568] mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={editSkillDesc}
+                  onChange={(e) => setEditSkillDesc(e.target.value)}
+                  rows={3}
+                  className="w-full p-2.5 border border-[#cccc] rounded-xl text-sm bg-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#4a5568] mb-1">
+                  Keywords (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={editSkillKeywords}
+                  onChange={(e) => setEditSkillKeywords(e.target.value)}
+                  className="w-full p-2.5 border border-[#cccc] rounded-xl text-sm bg-white"
+                />
+                <p className="text-xs text-[#4a5568] mt-1">Used for YouTube search when no curated videos are set</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#4a5568] mb-1">
+                  Order Value
+                </label>
+                <input
+                  type="number"
+                  value={editSkillOrder}
+                  onChange={(e) => setEditSkillOrder(Number(e.target.value))}
+                  min={1}
+                  className="w-full p-2.5 border border-[#cccc] rounded-xl text-sm bg-white"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleCloseSkillEditModal}
+                  disabled={actionInProgress}
+                  className="flex-1 bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-3 rounded-xl transition-all cursor-pointer text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionInProgress}
+                  className="flex-1 bg-[#5995fd] hover:bg-[#4d84e2] text-white font-bold p-3 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  {actionInProgress ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
