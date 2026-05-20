@@ -8,6 +8,7 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { Skill, Category, SkillProgressDoc, VideoStatus } from '../../../types';
 import { VideoMetadata } from '../../../lib/youtube/cacheService';
 import { getSkillProgress } from '../../../lib/firebase/progressService';
+import { AlertTriangle, ArrowLeft, Target, Play, Inbox } from 'lucide-react';
 
 export default function SkillWorkspacePage() {
   const params = useParams();
@@ -185,7 +186,7 @@ export default function SkillWorkspacePage() {
             onClick={() => router.push('/dashboard')}
             className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#4a5568] hover:text-[#5995fd] transition-colors cursor-pointer group"
           >
-            <span className="group-hover:-translate-x-1 transition-transform inline-block">←</span> Back to Dashboard
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
           </button>
           
           <div className="flex items-center gap-3">
@@ -213,7 +214,7 @@ export default function SkillWorkspacePage() {
         ) : errorMsg ? (
           // Error Message screen
           <div className="flex-1 flex flex-col justify-center items-center py-12 max-w-md mx-auto text-center">
-            <span className="text-4xl mb-4">⚠️</span>
+            <AlertTriangle className="w-16 h-16 mb-4 text-rose-500" />
             <h3 className="text-lg font-bold text-[#2d3748]">{errorMsg}</h3>
             <button
               onClick={() => router.push('/dashboard')}
@@ -230,7 +231,9 @@ export default function SkillWorkspacePage() {
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider bg-[#5995fd]/10 text-[#5995fd]">
                     {category?.name || 'Curriculum Track'}
                   </span>
-                  <span className="text-xs text-[#4a5568] font-bold">🎯 Priority {skill?.order}</span>
+                  <span className="text-xs text-[#4a5568] font-bold flex items-center gap-1">
+                    <Target className="w-3 h-3" /> Priority {skill?.order}
+                  </span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-[#2d3748] tracking-tight">{skill?.name}</h2>
                 <p className="mt-1 text-sm text-[#4a5568] leading-relaxed">{skill?.description}</p>
@@ -270,7 +273,7 @@ export default function SkillWorkspacePage() {
                       key={vid.id}
                       className="w-full flex flex-col sm:flex-row gap-3 p-3 rounded-xl border text-left transition-all bg-white hover:bg-[#f4f6f9] border-[#cccc]/40"
                     >
-                      <div className="w-full sm:w-24 shrink-0 aspect-video rounded-lg bg-slate-100 border border-[#cccc]/30 overflow-hidden relative">
+                      <div className="w-full sm:w-60 shrink-0 aspect-video rounded-lg bg-slate-100 border border-[#cccc]/30 overflow-hidden relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={vid.thumbnail}
@@ -301,9 +304,9 @@ export default function SkillWorkspacePage() {
                           onClick={() =>
                             router.push(`/dashboard/skills/${skillId}/video/${vid.id}`)
                           }
-                          className="mt-2 text-xs bg-[#f4f6f9] hover:bg-[#5995fd] hover:text-white text-[#5995fd] font-bold p-2 px-3 rounded-lg border border-[#cccc]/40 transition-all cursor-pointer"
+                          className="mt-2 text-xs bg-[#f4f6f9] hover:bg-[#5995fd] hover:text-white text-[#5995fd] font-bold p-2 px-3 rounded-lg border border-[#cccc]/40 transition-all cursor-pointer flex items-center gap-1"
                         >
-                          Open Learning Page
+                          <Play className="w-3 h-3" /> Open Learning Page
                         </button>
                       </div>
                     </div>
@@ -312,7 +315,7 @@ export default function SkillWorkspacePage() {
 
                 {videos.length === 0 && (
                   <div className="text-center py-12 text-[#4a5568]">
-                    <span className="text-2xl">📭</span>
+                    <Inbox className="w-12 h-12 mx-auto mb-2 text-[#4a5568]/50" />
                     <p className="text-xs font-bold mt-2">No learning resources cached yet.</p>
                   </div>
                 )}

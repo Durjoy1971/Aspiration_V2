@@ -6,6 +6,7 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/clientApp';
 import { Category } from '../../../types';
+import { AlertTriangle, CheckCircle, Folder, ChevronUp, ChevronDown, Pencil, Trash2, X, Plus } from 'lucide-react';
 
 export default function AdminCategoriesPage() {
   const { user } = useAuthStore();
@@ -275,16 +276,18 @@ export default function AdminCategoriesPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Hand: Category Creation Form */}
         <div className="bg-white border border-[#cccc]/50 rounded-2xl p-6 shadow-sm h-fit">
-          <h3 className="text-lg font-black text-[#2d3748] mb-4">🆕 Add New Category</h3>
+          <h3 className="text-lg font-black text-[#2d3748] mb-4 flex items-center gap-2">
+            <Plus className="w-5 h-5" /> Add New Category
+          </h3>
 
           {errorMsg && (
-            <div className="p-3 mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold">
-              ⚠️ {errorMsg}
+            <div className="p-3 mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" /> {errorMsg}
             </div>
           )}
           {successMsg && (
-            <div className="p-3 mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold">
-              ✅ {successMsg}
+            <div className="p-3 mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" /> {successMsg}
             </div>
           )}
 
@@ -358,7 +361,9 @@ export default function AdminCategoriesPage() {
         {/* Right Hand: Categories List */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           <div className="bg-white border border-[#cccc]/50 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-black text-[#2d3748] mb-6">🗂️ Active Path Categories</h3>
+            <h3 className="text-lg font-black text-[#2d3748] mb-6 flex items-center gap-2">
+              <Folder className="w-5 h-5" /> Active Path Categories
+            </h3>
 
             {loadingData ? (
               <p className="text-sm text-[#4a5568] animate-pulse">Loading active paths...</p>
@@ -393,7 +398,7 @@ export default function AdminCategoriesPage() {
                         className="text-xs bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-2 px-3 rounded-lg border border-[#cccc] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move up"
                       >
-                        ↑
+                        <ChevronUp className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleMoveCategoryDown(index)}
@@ -401,21 +406,21 @@ export default function AdminCategoriesPage() {
                         className="text-xs bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-2 px-3 rounded-lg border border-[#cccc] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move down"
                       >
-                        ↓
+                        <ChevronDown className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleEditCategory(category)}
                         disabled={actionInProgress}
-                        className="text-xs bg-white hover:bg-[#38b2ac] hover:text-white text-[#38b2ac] font-bold p-2 px-4 rounded-lg border border-[#38b2ac]/40 transition-all cursor-pointer"
+                        className="text-xs bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-2 px-3 rounded-lg border border-[#cccc] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                       >
-                        Edit
+                        <Pencil className="w-3 h-3" /> Edit
                       </button>
                       <button
                         onClick={() => handleDeleteCategory(category.id)}
                         disabled={actionInProgress}
-                        className="text-xs bg-white hover:bg-rose-600 hover:text-white text-rose-600 font-bold p-2 px-4 rounded-lg border border-rose-200 transition-all cursor-pointer"
+                        className="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold p-2 px-3 rounded-lg border border-rose-200 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
                       >
-                        Delete
+                        <Trash2 className="w-3 h-3" /> Delete
                       </button>
                     </div>
                   </div>
@@ -430,7 +435,9 @@ export default function AdminCategoriesPage() {
       {editModalOpen && editingCategory && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h3 className="text-lg font-black text-[#2d3748] mb-4">Edit Category</h3>
+            <h3 className="text-lg font-black text-[#2d3748] mb-4 flex items-center gap-2">
+              <Pencil className="w-5 h-5" /> Edit Category
+            </h3>
 
             <form onSubmit={handleSaveEdit} className="flex flex-col gap-4">
               <div>
@@ -478,16 +485,16 @@ export default function AdminCategoriesPage() {
                   type="button"
                   onClick={handleCloseEditModal}
                   disabled={actionInProgress}
-                  className="flex-1 bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-3 rounded-xl transition-all cursor-pointer text-sm"
+                  className="flex-1 bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-3 rounded-xl transition-all cursor-pointer text-sm flex items-center justify-center gap-2"
                 >
-                  Cancel
+                  <X className="w-4 h-4" /> Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionInProgress}
-                  className="flex-1 bg-[#38b2ac] hover:bg-[#2d8a83] text-white font-bold p-3 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex-1 bg-[#38b2ac] hover:bg-[#2d8a83] text-white font-bold p-3 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
                 >
-                  {actionInProgress ? 'Saving...' : 'Save Changes'}
+                  <CheckCircle className="w-4 h-4" /> {actionInProgress ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

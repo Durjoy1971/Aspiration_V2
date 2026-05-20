@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Image from 'next/image';
 import { useAuthStore } from './store/useAuthStore';
+import { AlertTriangle } from 'lucide-react';
 
 export default function LandingPage() {
   const { user, loading, error, loginWithGoogle, logout } = useAuthStore();
@@ -70,8 +71,8 @@ export default function LandingPage() {
               </p>
 
               {error && (
-                <div className="p-3 mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs sm:text-sm font-semibold">
-                  ⚠️ {error}
+                <div className="p-3 mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs sm:text-sm font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" /> {error}
                 </div>
               )}
 

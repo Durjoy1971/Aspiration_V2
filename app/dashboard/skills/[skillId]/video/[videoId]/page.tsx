@@ -13,6 +13,7 @@ import {
   recomputeSkillProgress,
   upsertVideoProgress,
 } from '../../../../../lib/firebase/progressService';
+import { AlertTriangle, ArrowLeft, Clock, CheckCircle, X, PlayCircle } from 'lucide-react';
 
 export default function VideoLearningPage() {
   const params = useParams();
@@ -240,7 +241,7 @@ export default function VideoLearningPage() {
             onClick={() => router.push(`/dashboard/skills/${skillId}`)}
             className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#4a5568] hover:text-[#5995fd] transition-colors cursor-pointer group"
           >
-            <span className="group-hover:-translate-x-1 transition-transform inline-block">←</span> Back to Skill
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Skill
           </button>
 
           <div className="flex items-center gap-3">
@@ -265,7 +266,7 @@ export default function VideoLearningPage() {
           </div>
         ) : errorMsg ? (
           <div className="flex-1 flex flex-col justify-center items-center py-12 max-w-md mx-auto text-center">
-            <span className="text-4xl mb-4">⚠️</span>
+            <AlertTriangle className="w-16 h-16 mb-4 text-rose-500" />
             <h3 className="text-lg font-bold text-[#2d3748]">{errorMsg}</h3>
             <button
               onClick={() => router.push(`/dashboard/skills/${skillId}`)}
@@ -293,7 +294,7 @@ export default function VideoLearningPage() {
                     <div className="flex justify-between items-start gap-4">
                       <h2 className="text-xl sm:text-2xl font-black text-[#2d3748] leading-snug">{selectedVideo.title}</h2>
                       <span className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#38b2ac]/10 text-[#38b2ac] border border-[#38b2ac]/20">
-                        ⏱️ {formatDuration(selectedVideo.duration)}
+                        <Clock className="w-3 h-3" /> {formatDuration(selectedVideo.duration)}
                       </span>
                     </div>
                     <p className="mt-2 text-xs text-[#4a5568] font-bold">{skill?.name}</p>
@@ -324,7 +325,9 @@ export default function VideoLearningPage() {
                   className="w-full p-3 border border-[#cccc] rounded-xl text-sm bg-white text-[#2d3748] focus:outline-none focus:ring-2 focus:ring-[#5995fd]"
                 />
                 {noteError && (
-                  <p className="mt-2 text-xs font-bold text-rose-600">⚠️ {noteError}</p>
+                  <p className="mt-2 text-xs font-bold text-rose-600 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {noteError}
+                  </p>
                 )}
               </div>
 

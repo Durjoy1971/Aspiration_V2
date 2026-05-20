@@ -9,6 +9,7 @@ import { db } from '../lib/firebase/clientApp';
 import { seedDatabase } from '../lib/firebase/seed';
 import { Category, Skill, SkillProgressDoc } from '../types';
 import { filterSkills } from '../lib/utils/filterUtils';
+import { AlertTriangle, Search, Database, ArrowLeft, Play, CheckCircle, X, ChevronUp, ChevronDown, Target, Folder } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user, loading, logout } = useAuthStore();
@@ -244,9 +245,7 @@ export default function DashboardPage() {
           {/* Search box with dynamic search input */}
           <div className="relative max-w-md w-full">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-4 w-4 text-[#4a5568]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Search className="h-4 w-4 text-[#4a5568]" />
             </div>
             <input
               type="text"
@@ -261,8 +260,8 @@ export default function DashboardPage() {
         {/* Database Empty Seeder Prompt (Massive WOW Factor) */}
         {!loadingData && categories.length === 0 && (user?.role === 'admin' || user?.role === 'superAdmin') && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 sm:p-8 text-center max-w-xl mx-auto shadow-sm">
-            <h3 className="text-lg font-bold text-amber-800 mb-2">
-              🗃️ Empty Datastore Detected
+            <h3 className="text-lg font-bold text-amber-800 mb-2 flex items-center justify-center gap-2">
+              <Database className="w-5 h-5" /> Empty Datastore Detected
             </h3>
             <p className="text-sm text-amber-700 mb-6 leading-relaxed">
               No categories or skills have been seeded into your Firestore database yet. Click the button below to automatically bootstrap Aspiration V2 with default standard curriculum tracks!
@@ -270,9 +269,9 @@ export default function DashboardPage() {
             <button
               onClick={handleSeedDatabase}
               disabled={seedingInProgress}
-              className="bg-[hsl(39,100%,50%)] hover:bg-[hsl(39,100%,45%)] text-white font-bold p-3 px-6 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[hsl(39,100%,50%)] hover:bg-[hsl(39,100%,45%)] text-white font-bold p-3 px-6 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {seedingInProgress ? 'Seeding Firestore...' : 'Seed Database with Defaults'}
+              <Database className="w-4 h-4" /> {seedingInProgress ? 'Seeding Firestore...' : 'Seed Database with Defaults'}
             </button>
           </div>
         )}
@@ -325,7 +324,9 @@ export default function DashboardPage() {
                           <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${badgeColor}`}>
                             {parentCategory?.name || skill.categoryId}
                           </span>
-                          <span className="text-xs text-[#4a5568] font-bold">🎯 Priority {skill.order}</span>
+                          <span className="text-xs text-[#4a5568] font-bold flex items-center gap-1">
+                            <Target className="w-3 h-3" /> Priority {skill.order}
+                          </span>
                         </div>
 
                         <h4 className="text-lg font-bold text-[#2d3748] group-hover:text-[#5995fd] transition-colors leading-tight">
@@ -337,7 +338,9 @@ export default function DashboardPage() {
 
                         <div className="mt-6 pt-4 border-t border-[#f4f6f9] space-y-2">
                           <div className="flex justify-between items-center text-xs">
-                            <span className="text-[#4a5568] font-bold">🗂️ {skill.videoIds?.length || 0} curated videos</span>
+                            <span className="text-[#4a5568] font-bold flex items-center gap-1">
+                              <Folder className="w-3 h-3" /> {skill.videoIds?.length || 0} curated videos
+                            </span>
                             <span className="font-black text-[#5995fd]">{completionPercent}% complete</span>
                           </div>
                           <div className="w-full h-2 rounded-full bg-[#f4f6f9] overflow-hidden">
@@ -352,9 +355,9 @@ export default function DashboardPage() {
                             </span>
                           <button
                             onClick={() => router.push(`/dashboard/skills/${skill.id}`)}
-                            className="text-xs bg-[#f4f6f9] hover:bg-[#5995fd] hover:text-white text-[#5995fd] font-bold p-2 px-4 rounded-lg border border-[#cccc]/40 transition-all cursor-pointer"
+                            className="text-xs bg-[#f4f6f9] hover:bg-[#5995fd] hover:text-white text-[#5995fd] font-bold p-2 px-4 rounded-lg border border-[#cccc]/40 transition-all cursor-pointer flex items-center gap-1"
                           >
-                            Explore Skill
+                            <Play className="w-3 h-3" /> Explore Skill
                           </button>
                           </div>
                         </div>

@@ -6,6 +6,7 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/clientApp';
 import { auth } from '../../../lib/firebase/clientApp';
+import { Shield, AlertTriangle, ArrowLeft, X, CheckCircle, ChevronUp, ChevronDown, Key } from 'lucide-react';
 
 interface UserDoc {
   uid: string;
@@ -132,7 +133,7 @@ export default function AdminUsersPage() {
         {/* Header summary panel */}
         <div className="bg-[#ffffff] border border-[#cccc]/50 rounded-2xl p-6 sm:p-8 mb-8 shadow-sm relative overflow-hidden">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[hsl(39,100%,50%)]/10 text-[hsl(39,100%,50%)] border border-[hsl(39,100%,50%)]/20 mb-3">
-            🛡️ SuperAdmin Access Level
+            <Shield className="w-3 h-3" /> SuperAdmin Access Level
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-[#2d3748]">
             Privileged Accounts Manager
@@ -144,20 +145,22 @@ export default function AdminUsersPage() {
 
         {/* Feedback alerts */}
         {successMsg && (
-          <div className="p-3 mb-6 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm font-bold">
-            🎉 {successMsg}
+          <div className="p-3 mb-6 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm font-bold flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" /> {successMsg}
           </div>
         )}
 
         {errorMsg && (
-          <div className="p-3 mb-6 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs sm:text-sm font-bold">
-            ⚠️ {errorMsg}
+          <div className="p-3 mb-6 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs sm:text-sm font-bold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" /> {errorMsg}
           </div>
         )}
 
         {/* Users Control Board */}
         <div className="bg-white border border-[#cccc]/50 rounded-2xl p-6 shadow-sm">
-          <h3 className="text-lg font-black text-[#2d3748] mb-6">🔑 Privileged Accounts</h3>
+          <h3 className="text-lg font-black text-[#2d3748] mb-6 flex items-center gap-2">
+            <Key className="w-5 h-5" /> Privileged Accounts
+          </h3>
 
           {loadingData ? (
             <div className="flex flex-col gap-3">

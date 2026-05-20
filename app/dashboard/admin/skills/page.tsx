@@ -6,6 +6,7 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/clientApp';
 import { Category, Skill } from '../../../types';
+import { AlertTriangle, CheckCircle, ChevronUp, ChevronDown, Pencil, Trash2, X, Plus, Target, Eye, Video } from 'lucide-react';
 
 export default function AdminSkillsPage() {
   const { user } = useAuthStore();
@@ -447,16 +448,18 @@ export default function AdminSkillsPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 z-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Hand: Skill Creation Form */}
         <div className="bg-white border border-[#cccc]/50 rounded-2xl p-6 shadow-sm h-fit">
-          <h3 className="text-lg font-black text-[#2d3748] mb-4">🆕 Add New Skill Module</h3>
+          <h3 className="text-lg font-black text-[#2d3748] mb-4 flex items-center gap-2">
+            <Plus className="w-5 h-5" /> Add New Skill Module
+          </h3>
 
           {errorMsg && (
-            <div className="p-3 mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold">
-              ⚠️ {errorMsg}
+            <div className="p-3 mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" /> {errorMsg}
             </div>
           )}
           {successMsg && (
-            <div className="p-3 mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold">
-              ✅ {successMsg}
+            <div className="p-3 mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" /> {successMsg}
             </div>
           )}
 
@@ -466,8 +469,8 @@ export default function AdminSkillsPage() {
                 Parent Category
               </label>
               {categories.length === 0 ? (
-                <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded">
-                  ⚠️ No categories exist. You must create a Category first!
+                <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" /> No categories exist. You must create a Category first!
                 </p>
               ) : (
                 <select
@@ -568,7 +571,9 @@ export default function AdminSkillsPage() {
         {/* Right Hand: Skills List */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           <div className="bg-white border border-[#cccc]/50 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-black text-[#2d3748] mb-6">🎯 Active Curriculum Skills</h3>
+            <h3 className="text-lg font-black text-[#2d3748] mb-6 flex items-center gap-2">
+              <Target className="w-5 h-5" /> Active Curriculum Skills
+            </h3>
 
             {loadingData ? (
               <p className="text-sm text-[#4a5568] animate-pulse">Loading active skills...</p>
@@ -608,7 +613,7 @@ export default function AdminSkillsPage() {
                           className="text-xs bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-2 px-3 rounded-lg border border-[#cccc] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Move up"
                         >
-                          ↑
+                          <ChevronUp className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleMoveSkillDown(index)}
@@ -616,28 +621,28 @@ export default function AdminSkillsPage() {
                           className="text-xs bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-2 px-3 rounded-lg border border-[#cccc] transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Move down"
                         >
-                          ↓
+                          <ChevronDown className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleEditSkill(skill)}
                           disabled={actionInProgress}
-                          className="text-xs bg-white hover:bg-[#5995fd] hover:text-white text-[#5995fd] font-bold p-2 px-4 rounded-lg border border-[#5995fd]/40 transition-all cursor-pointer"
+                          className="text-xs bg-white hover:bg-[#5995fd] hover:text-white text-[#5995fd] font-bold p-2 px-4 rounded-lg border border-[#5995fd]/40 transition-all cursor-pointer flex items-center gap-1"
                         >
-                          Edit
+                          <Pencil className="w-3 h-3" /> Edit
                         </button>
                         <button
                           onClick={() => handleOpenVideoManager(skill)}
                           disabled={actionInProgress}
-                          className="text-xs bg-white hover:bg-[#5995fd] hover:text-white text-[#5995fd] font-bold p-2 px-4 rounded-lg border border-[#5995fd]/40 transition-all cursor-pointer"
+                          className="text-xs bg-white hover:bg-[#5995fd] hover:text-white text-[#5995fd] font-bold p-2 px-4 rounded-lg border border-[#5995fd]/40 transition-all cursor-pointer flex items-center gap-1"
                         >
-                          Manage Videos
+                          <Video className="w-3 h-3" /> Manage Videos
                         </button>
                         <button
                           onClick={() => handleDeleteSkill(skill.id)}
                           disabled={actionInProgress}
-                          className="text-xs bg-white hover:bg-rose-600 hover:text-white text-rose-600 font-bold p-2 px-4 rounded-lg border border-rose-200 transition-all cursor-pointer"
+                          className="text-xs bg-white hover:bg-rose-600 hover:text-white text-rose-600 font-bold p-2 px-4 rounded-lg border border-rose-200 transition-all cursor-pointer flex items-center gap-1"
                         >
-                          Delete
+                          <Trash2 className="w-3 h-3" /> Delete
                         </button>
                       </div>
                     </div>
@@ -664,14 +669,14 @@ export default function AdminSkillsPage() {
                 onClick={handleCloseVideoManager}
                 className="text-[#4a5568] hover:text-rose-600 transition-colors text-2xl font-bold leading-none"
               >
-                ×
+                <X className="w-6 h-6" />
               </button>
             </div>
 
             <div className="p-6 flex-1 overflow-y-auto">
               {videoManagerError && (
-                <div className="p-3 mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold">
-                  ⚠️ {videoManagerError}
+                <div className="p-3 mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" /> {videoManagerError}
                 </div>
               )}
 
@@ -692,12 +697,12 @@ export default function AdminSkillsPage() {
                   <button
                     onClick={handleAddVideoId}
                     disabled={videoManagerLoading || !newVideoId.trim()}
-                    className="bg-[#5995fd] hover:bg-[#4d84e2] text-white font-bold p-2.5 px-4 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="bg-[#5995fd] hover:bg-[#4d84e2] text-white font-bold p-2.5 px-4 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2"
                   >
-                    {videoManagerLoading ? 'Adding...' : 'Add'}
+                    <Plus className="w-4 h-4" /> {videoManagerLoading ? 'Adding...' : 'Add'}
                   </button>
                 </div>
-                <p className="text-[10px] text-[#4a5568] mt-2">
+                <p className="text-[10px] text-[#4a5568] mt-2 flex items-center gap-1">
                   💡 Enter the 11-character YouTube video ID (from the URL: youtube.com/watch?v=VIDEO_ID)
                 </p>
               </div>
@@ -725,7 +730,7 @@ export default function AdminSkillsPage() {
                             className="text-[#4a5568] hover:text-[#5995fd] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-bold"
                             title="Move up"
                           >
-                            ↑
+                            <ChevronUp className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleMoveVideoDown(index)}
@@ -733,7 +738,7 @@ export default function AdminSkillsPage() {
                             className="text-[#4a5568] hover:text-[#5995fd] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-bold"
                             title="Move down"
                           >
-                            ↓
+                            <ChevronDown className="w-4 h-4" />
                           </button>
                         </div>
 
@@ -747,9 +752,9 @@ export default function AdminSkillsPage() {
                         <button
                           onClick={() => handleRemoveVideoId(videoId)}
                           disabled={videoManagerLoading}
-                          className="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold p-2 px-3 rounded-lg border border-rose-200 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold p-2 px-3 rounded-lg border border-rose-200 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                         >
-                          Remove
+                          <X className="w-3 h-3" /> Remove
                         </button>
                       </div>
                     ))}
@@ -770,9 +775,9 @@ export default function AdminSkillsPage() {
                   }
                 }}
                 disabled={videoManagerLoading}
-                className="bg-[#5995fd]/10 hover:bg-[#5995fd]/20 text-[#5995fd] font-bold p-2.5 px-4 rounded-xl transition-all cursor-pointer border border-[#5995fd]/30 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                className="bg-[#5995fd]/10 hover:bg-[#5995fd]/20 text-[#5995fd] font-bold p-2.5 px-4 rounded-xl transition-all cursor-pointer border border-[#5995fd]/30 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center gap-2"
               >
-                👁️ Preview as Learner
+                <Eye className="w-4 h-4" /> Preview as Learner
               </button>
               <button
                 onClick={handleCloseVideoManager}
@@ -790,7 +795,9 @@ export default function AdminSkillsPage() {
       {editSkillModalOpen && editingSkill && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h3 className="text-lg font-black text-[#2d3748] mb-4">Edit Skill</h3>
+            <h3 className="text-lg font-black text-[#2d3748] mb-4 flex items-center gap-2">
+              <Pencil className="w-5 h-5" /> Edit Skill
+            </h3>
 
             <form onSubmit={handleSaveSkillEdit} className="flex flex-col gap-4">
               <div>
@@ -851,16 +858,16 @@ export default function AdminSkillsPage() {
                   type="button"
                   onClick={handleCloseSkillEditModal}
                   disabled={actionInProgress}
-                  className="flex-1 bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-3 rounded-xl transition-all cursor-pointer text-sm"
+                  className="flex-1 bg-[#f4f6f9] hover:bg-[#e2e8f0] text-[#4a5568] font-bold p-3 rounded-xl transition-all cursor-pointer text-sm flex items-center justify-center gap-2"
                 >
-                  Cancel
+                  <X className="w-4 h-4" /> Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionInProgress}
-                  className="flex-1 bg-[#5995fd] hover:bg-[#4d84e2] text-white font-bold p-3 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex-1 bg-[#5995fd] hover:bg-[#4d84e2] text-white font-bold p-3 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
                 >
-                  {actionInProgress ? 'Saving...' : 'Save Changes'}
+                  <CheckCircle className="w-4 h-4" /> {actionInProgress ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>
