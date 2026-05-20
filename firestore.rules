@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function role() {
+      return userDoc().data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && role() in ['admin', 'superAdmin'];
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && role() == 'superAdmin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidStatus(status) {
+      return status in ['not_started', 'in_progress', 'completed'];
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow update: if (
+          isOwner(uid)
+          && !('role' in request.resource.data.diff(resource.data).affectedKeys())
+        )
+        || isSuperAdmin();
+      allow delete: if false;
+    }
+
+    match /skills/{skillId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /videoCache/{videoId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /skillVideoCache/{skillId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /notes/{noteId} {
+      allow read: if isSignedIn() && (resource == null || request.auth.uid == resource.data.userId);
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.userId;
+
+      allow create: if isSignedIn()
+        && request.auth.uid == request.resource.data.userId
+        && noteId == request.auth.uid + '_' + request.resource.data.videoId;
+
+      allow update: if isSignedIn()
+        && request.auth.uid == resource.data.userId
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.videoId == resource.data.videoId
+        && request.resource.data.skillId == resource.data.skillId;
+    }
+
+    match /progress/{userId}/videos/{videoId} {
+      allow read: if isOwner(userId) || resource == null;
+      allow create, update: if isOwner(userId)
+        && request.resource.data.userId == userId
+        && request.resource.data.videoId == videoId
+        && request.resource.data.skillId is string
+        && isValidStatus(request.resource.data.status);
+      allow delete: if isOwner(userId);
+    }
+
+    match /progress/{userId}/skills/{skillId} {
+      allow read: if isOwner(userId) || resource == null;
+      allow create, update: if isOwner(userId)
+        && request.resource.data.userId == userId
+        && request.resource.data.skillId == skillId
+        && request.resource.data.totalVideos is number
+        && request.resource.data.completedVideos is number
+        && request.resource.data.completionPercent is number
+        && isValidStatus(request.resource.data.status);
+      allow delete: if isOwner(userId);
+    }
+  }
+}
