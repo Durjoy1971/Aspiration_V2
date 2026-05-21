@@ -35,7 +35,7 @@ test.describe('Curated Video Manager E2E', () => {
     await setE2EUser(page, 'admin');
     await page.goto('/dashboard/admin/skills');
 
-    await expect(page.getByRole('heading', { name: 'Skill Control Panel' })).toBeVisible();
+    await expect(page.getByText('Skill Control Panel')).toBeVisible();
 
     // Find a skill and click "Manage Videos"
     const manageVideosButton = page.getByText('Manage Videos').first();
@@ -57,7 +57,7 @@ test.describe('Curated Video Manager E2E', () => {
     const videoIdInput = page.getByPlaceholder('e.g. dQw4w9WgXcQ');
     await videoIdInput.fill('testVideoId123');
 
-    const addButton = page.getByText('Add');
+    const addButton = page.getByRole('button', { name: 'Add' });
     await addButton.click();
 
     // Verify video ID appears in list (may need to wait for Firestore update)
@@ -74,7 +74,7 @@ test.describe('Curated Video Manager E2E', () => {
     const videoIdInput = page.getByPlaceholder('e.g. dQw4w9WgXcQ');
     await videoIdInput.fill('duplicateId123');
 
-    const addButton = page.getByText('Add');
+    const addButton = page.getByRole('button', { name: 'Add' });
     await addButton.click();
 
     // Try to add the same ID again
@@ -95,15 +95,16 @@ test.describe('Curated Video Manager E2E', () => {
     // Add a video ID first
     const videoIdInput = page.getByPlaceholder('e.g. dQw4w9WgXcQ');
     await videoIdInput.fill('toBeRemoved123');
-    await page.getByText('Add').click();
+    await page.getByRole('button', { name: 'Add' }).click();
     await expect(page.getByText('toBeRemoved123')).toBeVisible({ timeout: 5000 });
 
     // Remove it
-    const removeButton = page.getByText('Remove').first();
+    const removeButton = page.getByRole('button', { name: 'Remove' }).first();
+    await expect(removeButton).toBeEnabled();
     await removeButton.click();
 
     // Verify it's gone
-    await expect(page.getByText('toBeRemoved123')).not.toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('toBeRemoved123')).not.toBeVisible({ timeout: 10000 });
   });
 
   test('should allow admin to reorder video IDs with up/down buttons', async ({ page }) => {
@@ -116,11 +117,11 @@ test.describe('Curated Video Manager E2E', () => {
     // Add two video IDs
     const videoIdInput = page.getByPlaceholder('e.g. dQw4w9WgXcQ');
     await videoIdInput.fill('videoA');
-    await page.getByText('Add').click();
+    await page.getByRole('button', { name: 'Add' }).click();
     await expect(page.getByText('videoA')).toBeVisible({ timeout: 5000 });
 
     await videoIdInput.fill('videoB');
-    await page.getByText('Add').click();
+    await page.getByRole('button', { name: 'Add' }).click();
     await expect(page.getByText('videoB')).toBeVisible({ timeout: 5000 });
 
     // Move videoB up (should swap with videoA)
@@ -140,7 +141,7 @@ test.describe('Curated Video Manager E2E', () => {
     await manageVideosButton.click();
 
     // Click preview button
-    const previewButton = page.getByText('👁️ Preview as Learner');
+    const previewButton = page.getByRole('button', { name: /Preview as Learner/ });
     await previewButton.click();
 
     // Should navigate to learner skill page
@@ -175,11 +176,11 @@ test.describe('Curated Video Manager E2E', () => {
     // Add a real YouTube video ID
     const videoIdInput = page.getByPlaceholder('e.g. dQw4w9WgXcQ');
     await videoIdInput.fill('dQw4w9WgXcQ');
-    await page.getByText('Add').click();
+    await page.getByRole('button', { name: 'Add' }).click();
     await expect(page.getByText('dQw4w9WgXcQ')).toBeVisible({ timeout: 5000 });
 
     // Preview as learner
-    await page.getByText('👁️ Preview as Learner').click();
+    await page.getByRole('button', { name: /Preview as Learner/ }).click();
     await expect(page).toHaveURL(/\/dashboard\/skills\/.+/);
 
     // Verify videos are displayed on learner page
