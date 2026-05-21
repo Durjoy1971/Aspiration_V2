@@ -45,18 +45,18 @@ test.describe('Learner Flow Route Guards E2E', () => {
 
   test('should allow authenticated learner to access skill workspace', async ({ page }) => {
     await setE2EUser(page, 'learner');
-    await page.goto('/dashboard/skills/docker');
+    await page.goto('/dashboard/skills/e2e-skill');
 
-    await expect(page).toHaveURL(/\/dashboard\/skills\/docker/);
-    await expect(page.locator('text=Aspiration Workspace')).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard\/skills\/e2e-skill/);
+    await expect(page.locator('text=Aspiration Console')).toBeVisible();
   });
 
   test('should allow authenticated learner to view skill videos', async ({ page }) => {
     await setE2EUser(page, 'learner');
-    await page.goto('/dashboard/skills/docker');
+    await page.goto('/dashboard/skills/e2e-skill');
 
     // Wait for skill workspace to load
-    await expect(page.locator('text=Aspiration Workspace')).toBeVisible();
+    await expect(page.locator('text=Aspiration Console')).toBeVisible();
 
     // Check that videos are displayed (if any exist)
     const videoCards = page.locator('div[class*="aspect-video"]');

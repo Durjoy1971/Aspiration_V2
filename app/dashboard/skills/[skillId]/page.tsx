@@ -9,6 +9,7 @@ import { Skill, Category, SkillProgressDoc, VideoStatus } from '../../../types';
 import { VideoMetadata } from '../../../lib/youtube/cacheService';
 import { getSkillProgress } from '../../../lib/firebase/progressService';
 import { AlertTriangle, ArrowLeft, Target, Play, Inbox } from 'lucide-react';
+import { isE2ETestMode, e2eGetSkills, e2eGetCategories } from '../../../lib/firebase/e2eMockData';
 
 export default function SkillWorkspacePage() {
   const params = useParams();
@@ -45,6 +46,47 @@ export default function SkillWorkspacePage() {
       try {
         setLoadingWorkspace(true);
         setErrorMsg(null);
+
+        if (isE2ETestMode()) {
+          // Use mock data in E2E test mode
+          const mockSkills = e2eGetSkills();
+          const mockSkill = mockSkills.find(s => s.id === skillId);
+          if (!mockSkill) {
+            if (active) {
+              setErrorMsg('The requested skill pathway could not be found.');
+              setLoadingWorkspace(false);
+            }
+            return;
+          }
+
+          const mockCategories = e2eGetCategories();
+          const mockCategory = mockCategories.find(c => c.id === mockSkill.categoryId) || null;
+
+          if (!active) return;
+          setSkill(mockSkill);
+          setCategory(mockCategory);
+          const mockVideos = (mockSkill.videoIds || []).map((id, index) => ({
+            id,
+            title: `Mock Video Title for ${id}`,
+            description: `This is a mock description for YouTube video ${id} in skill ${mockSkill.name}.`,
+            thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop',
+            duration: 'PT10M30S',
+            publishedAt: new Date().toISOString(),
+            cachedAt: Date.now(),
+          }));
+          setVideos(mockVideos);
+          setVideoStatusMap({});
+          setSkillProgress({
+            userId: user.uid,
+            skillId: mockSkill.id,
+            totalVideos: mockVideos.length,
+            completedVideos: 0,
+            completionPercent: 0,
+            status: 'not_started',
+          });
+          setLoadingWorkspace(false);
+          return;
+        }
 
         // 1. Fetch Skill Document
         const skillRef = doc(db, 'skills', skillId);
@@ -271,6 +313,7 @@ export default function SkillWorkspacePage() {
                   return (
                     <div
                       key={vid.id}
+                      data-testid="video-card"
                       className="w-full flex flex-col sm:flex-row gap-3 p-3 rounded-xl border text-left transition-all bg-white hover:bg-[#f4f6f9] border-[#cccc]/40"
                     >
                       <div className="w-full sm:w-60 shrink-0 aspect-video rounded-lg bg-slate-100 border border-[#cccc]/30 overflow-hidden relative">

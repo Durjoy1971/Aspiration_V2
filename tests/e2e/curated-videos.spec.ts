@@ -125,7 +125,7 @@ test.describe('Curated Video Manager E2E', () => {
     await expect(page.getByText('videoB')).toBeVisible({ timeout: 5000 });
 
     // Move videoB up (should swap with videoA)
-    const videoBRow = page.getByText('videoB').locator('..');
+    const videoBRow = page.getByText('videoB').locator('xpath=../..');
     const upButton = videoBRow.getByTitle('Move up');
     await upButton.click();
 
