@@ -7,6 +7,13 @@ import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from 'fir
 import { db } from '../../../lib/firebase/clientApp';
 import { Category } from '../../../types';
 import { AlertTriangle, CheckCircle, Folder, ChevronUp, ChevronDown, Pencil, Trash2, X, Plus } from 'lucide-react';
+import {
+  isE2ETestMode,
+  e2eGetCategories,
+  e2eAddCategory,
+  e2eUpdateCategory,
+  e2eDeleteCategory,
+} from '../../../lib/firebase/e2eMockData';
 
 export default function AdminCategoriesPage() {
   const { user } = useAuthStore();
@@ -34,6 +41,12 @@ export default function AdminCategoriesPage() {
   const fetchCategories = async () => {
     try {
       setLoadingData(true);
+
+      if (isE2ETestMode()) {
+        setCategories(e2eGetCategories());
+        return;
+      }
+
       const catQuery = query(collection(db, 'categories'), orderBy('order', 'asc'));
       const catSnapshot = await getDocs(catQuery);
       const catList = catSnapshot.docs.map((docItem) => ({
@@ -54,6 +67,14 @@ export default function AdminCategoriesPage() {
 
     const load = async () => {
       try {
+        if (isE2ETestMode()) {
+          if (active) {
+            setCategories(e2eGetCategories());
+            setLoadingData(false);
+          }
+          return;
+        }
+
         const catQuery = query(collection(db, 'categories'), orderBy('order', 'asc'));
         const catSnapshot = await getDocs(catQuery);
         const catList = catSnapshot.docs.map((docItem) => ({
@@ -118,8 +139,12 @@ export default function AdminCategoriesPage() {
         order: Number(catOrder),
       };
 
-      const categoryDocRef = doc(db, 'categories', trimmedId);
-      await setDoc(categoryDocRef, newCategory);
+      if (isE2ETestMode()) {
+        e2eAddCategory(newCategory);
+      } else {
+        const categoryDocRef = doc(db, 'categories', trimmedId);
+        await setDoc(categoryDocRef, newCategory);
+      }
 
       // Reset Form
       setCatId('');
@@ -146,8 +171,14 @@ export default function AdminCategoriesPage() {
       setActionInProgress(true);
       setErrorMsg('');
       setSuccessMsg('');
-      const categoryDocRef = doc(db, 'categories', id);
-      await deleteDoc(categoryDocRef);
+
+      if (isE2ETestMode()) {
+        e2eDeleteCategory(id);
+      } else {
+        const categoryDocRef = doc(db, 'categories', id);
+        await deleteDoc(categoryDocRef);
+      }
+
       await fetchCategories();
       setSuccessMsg('Category deleted successfully!');
     } catch (err: unknown) {
@@ -181,8 +212,12 @@ export default function AdminCategoriesPage() {
         order: editCatOrder,
       };
 
-      const categoryDocRef = doc(db, 'categories', editingCategory.id);
-      await setDoc(categoryDocRef, updatedCategory, { merge: true });
+      if (isE2ETestMode()) {
+        e2eUpdateCategory(editingCategory.id, updatedCategory);
+      } else {
+        const categoryDocRef = doc(db, 'categories', editingCategory.id);
+        await setDoc(categoryDocRef, updatedCategory, { merge: true });
+      }
 
       setEditModalOpen(false);
       setEditingCategory(null);
@@ -213,10 +248,16 @@ export default function AdminCategoriesPage() {
       setActionInProgress(true);
       setErrorMsg('');
       setSuccessMsg('');
-      // Update order values in Firestore
-      for (let i = 0; i < newCategories.length; i++) {
-        const catRef = doc(db, 'categories', newCategories[i].id);
-        await setDoc(catRef, { order: i + 1 }, { merge: true });
+      // Update order values
+      if (isE2ETestMode()) {
+        for (let i = 0; i < newCategories.length; i++) {
+          e2eUpdateCategory(newCategories[i].id, { order: i + 1 });
+        }
+      } else {
+        for (let i = 0; i < newCategories.length; i++) {
+          const catRef = doc(db, 'categories', newCategories[i].id);
+          await setDoc(catRef, { order: i + 1 }, { merge: true });
+        }
       }
       await fetchCategories();
       setSuccessMsg('Category moved up successfully!');
@@ -237,10 +278,16 @@ export default function AdminCategoriesPage() {
       setActionInProgress(true);
       setErrorMsg('');
       setSuccessMsg('');
-      // Update order values in Firestore
-      for (let i = 0; i < newCategories.length; i++) {
-        const catRef = doc(db, 'categories', newCategories[i].id);
-        await setDoc(catRef, { order: i + 1 }, { merge: true });
+      // Update order values
+      if (isE2ETestMode()) {
+        for (let i = 0; i < newCategories.length; i++) {
+          e2eUpdateCategory(newCategories[i].id, { order: i + 1 });
+        }
+      } else {
+        for (let i = 0; i < newCategories.length; i++) {
+          const catRef = doc(db, 'categories', newCategories[i].id);
+          await setDoc(catRef, { order: i + 1 }, { merge: true });
+        }
       }
       await fetchCategories();
       setSuccessMsg('Category moved down successfully!');

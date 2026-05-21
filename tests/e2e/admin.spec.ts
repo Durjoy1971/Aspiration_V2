@@ -123,8 +123,8 @@ test.describe('Admin Control Panels Security E2E', () => {
       await categorySelect.selectOption({ index: 0 });
 
       // Fill in skill form
-      await page.fill('input[placeholder="e.g. react-basics"]', 'e2e-test-skill');
-      await page.fill('input[placeholder="e.g. React Fundamentals"]', 'E2E Test Skill');
+      await page.fill('input[placeholder="e.g. react-framework"]', 'e2e-test-skill');
+      await page.fill('input[placeholder="e.g. React & Component Trees"]', 'E2E Test Skill');
       await page.fill('textarea[placeholder="Core concepts details..."]', 'Test skill for E2E');
       await page.fill('input[placeholder="e.g. react, components, hooks"]', 'e2e,test,skill');
       await page.fill('input[type="number"]', '1');

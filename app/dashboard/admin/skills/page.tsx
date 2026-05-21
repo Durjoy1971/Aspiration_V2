@@ -7,6 +7,14 @@ import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from 'fir
 import { db } from '../../../lib/firebase/clientApp';
 import { Category, Skill } from '../../../types';
 import { AlertTriangle, CheckCircle, ChevronUp, ChevronDown, Pencil, Trash2, X, Plus, Target, Eye, Video } from 'lucide-react';
+import {
+  isE2ETestMode,
+  e2eGetCategories,
+  e2eGetSkills,
+  e2eAddSkill,
+  e2eUpdateSkill,
+  e2eDeleteSkill,
+} from '../../../lib/firebase/e2eMockData';
 
 export default function AdminSkillsPage() {
   const { user } = useAuthStore();
@@ -44,6 +52,13 @@ export default function AdminSkillsPage() {
   const fetchData = async () => {
     try {
       setLoadingData(true);
+
+      if (isE2ETestMode()) {
+        setCategories(e2eGetCategories());
+        setSkills(e2eGetSkills());
+        return;
+      }
+
       const catQuery = query(collection(db, 'categories'), orderBy('order', 'asc'));
       const catSnapshot = await getDocs(catQuery);
       const catList = catSnapshot.docs.map((docItem) => ({
@@ -72,6 +87,20 @@ export default function AdminSkillsPage() {
 
     const load = async () => {
       try {
+        if (isE2ETestMode()) {
+          if (active) {
+            const catList = e2eGetCategories();
+            const skillList = e2eGetSkills();
+            setCategories(catList);
+            setSkills(skillList);
+            if (catList.length > 0) {
+              setSelectedCatId(catList[0].id);
+            }
+            setLoadingData(false);
+          }
+          return;
+        }
+
         const catQuery = query(collection(db, 'categories'), orderBy('order', 'asc'));
         const catSnapshot = await getDocs(catQuery);
         const catList = catSnapshot.docs.map((docItem) => ({
@@ -155,8 +184,12 @@ export default function AdminSkillsPage() {
         keywords: keywordsArray,
       };
 
-      const skillDocRef = doc(db, 'skills', trimmedId);
-      await setDoc(skillDocRef, newSkill);
+      if (isE2ETestMode()) {
+        e2eAddSkill(newSkill);
+      } else {
+        const skillDocRef = doc(db, 'skills', trimmedId);
+        await setDoc(skillDocRef, newSkill);
+      }
 
       // Reset Form
       setSkillId('');
@@ -184,8 +217,14 @@ export default function AdminSkillsPage() {
       setActionInProgress(true);
       setErrorMsg('');
       setSuccessMsg('');
-      const skillDocRef = doc(db, 'skills', id);
-      await deleteDoc(skillDocRef);
+
+      if (isE2ETestMode()) {
+        e2eDeleteSkill(id);
+      } else {
+        const skillDocRef = doc(db, 'skills', id);
+        await deleteDoc(skillDocRef);
+      }
+
       await fetchData();
       setSuccessMsg('Skill deleted successfully!');
     } catch (err: unknown) {
@@ -228,8 +267,12 @@ export default function AdminSkillsPage() {
         keywords: keywordsArray,
       };
 
-      const skillDocRef = doc(db, 'skills', editingSkill.id);
-      await setDoc(skillDocRef, updatedSkill, { merge: true });
+      if (isE2ETestMode()) {
+        e2eUpdateSkill(editingSkill.id, updatedSkill);
+      } else {
+        const skillDocRef = doc(db, 'skills', editingSkill.id);
+        await setDoc(skillDocRef, updatedSkill, { merge: true });
+      }
 
       setEditSkillModalOpen(false);
       setEditingSkill(null);
@@ -261,10 +304,16 @@ export default function AdminSkillsPage() {
       setActionInProgress(true);
       setErrorMsg('');
       setSuccessMsg('');
-      // Update order values in Firestore
-      for (let i = 0; i < newSkills.length; i++) {
-        const skillRef = doc(db, 'skills', newSkills[i].id);
-        await setDoc(skillRef, { order: i + 1 }, { merge: true });
+      // Update order values
+      if (isE2ETestMode()) {
+        for (let i = 0; i < newSkills.length; i++) {
+          e2eUpdateSkill(newSkills[i].id, { order: i + 1 });
+        }
+      } else {
+        for (let i = 0; i < newSkills.length; i++) {
+          const skillRef = doc(db, 'skills', newSkills[i].id);
+          await setDoc(skillRef, { order: i + 1 }, { merge: true });
+        }
       }
       await fetchData();
       setSuccessMsg('Skill moved up successfully!');
@@ -285,10 +334,16 @@ export default function AdminSkillsPage() {
       setActionInProgress(true);
       setErrorMsg('');
       setSuccessMsg('');
-      // Update order values in Firestore
-      for (let i = 0; i < newSkills.length; i++) {
-        const skillRef = doc(db, 'skills', newSkills[i].id);
-        await setDoc(skillRef, { order: i + 1 }, { merge: true });
+      // Update order values
+      if (isE2ETestMode()) {
+        for (let i = 0; i < newSkills.length; i++) {
+          e2eUpdateSkill(newSkills[i].id, { order: i + 1 });
+        }
+      } else {
+        for (let i = 0; i < newSkills.length; i++) {
+          const skillRef = doc(db, 'skills', newSkills[i].id);
+          await setDoc(skillRef, { order: i + 1 }, { merge: true });
+        }
       }
       await fetchData();
       setSuccessMsg('Skill moved down successfully!');
@@ -329,13 +384,19 @@ export default function AdminSkillsPage() {
       setVideoManagerError('');
 
       const updatedVideoIds = [...selectedSkillForVideos.videoIds, trimmedId];
-      const skillDocRef = doc(db, 'skills', selectedSkillForVideos.id);
-      await setDoc(skillDocRef, { videoIds: updatedVideoIds }, { merge: true });
+
+      if (isE2ETestMode()) {
+        e2eUpdateSkill(selectedSkillForVideos.id, { videoIds: updatedVideoIds });
+      } else {
+        const skillDocRef = doc(db, 'skills', selectedSkillForVideos.id);
+        await setDoc(skillDocRef, { videoIds: updatedVideoIds }, { merge: true });
+      }
 
       setNewVideoId('');
       await fetchData();
       // Update the selected skill with new data
-      const updatedSkill = skills.find(s => s.id === selectedSkillForVideos.id);
+      const freshSkills = isE2ETestMode() ? e2eGetSkills() : skills;
+      const updatedSkill = freshSkills.find(s => s.id === selectedSkillForVideos.id);
       if (updatedSkill) {
         setSelectedSkillForVideos(updatedSkill);
       }
@@ -355,12 +416,18 @@ export default function AdminSkillsPage() {
       setVideoManagerError('');
 
       const updatedVideoIds = selectedSkillForVideos.videoIds.filter(id => id !== videoId);
-      const skillDocRef = doc(db, 'skills', selectedSkillForVideos.id);
-      await setDoc(skillDocRef, { videoIds: updatedVideoIds }, { merge: true });
+
+      if (isE2ETestMode()) {
+        e2eUpdateSkill(selectedSkillForVideos.id, { videoIds: updatedVideoIds });
+      } else {
+        const skillDocRef = doc(db, 'skills', selectedSkillForVideos.id);
+        await setDoc(skillDocRef, { videoIds: updatedVideoIds }, { merge: true });
+      }
 
       await fetchData();
       // Update the selected skill with new data
-      const updatedSkill = skills.find(s => s.id === selectedSkillForVideos.id);
+      const freshSkills = isE2ETestMode() ? e2eGetSkills() : skills;
+      const updatedSkill = freshSkills.find(s => s.id === selectedSkillForVideos.id);
       if (updatedSkill) {
         setSelectedSkillForVideos(updatedSkill);
       }
@@ -382,11 +449,16 @@ export default function AdminSkillsPage() {
       const updatedVideoIds = [...selectedSkillForVideos.videoIds];
       [updatedVideoIds[index], updatedVideoIds[index - 1]] = [updatedVideoIds[index - 1], updatedVideoIds[index]];
 
-      const skillDocRef = doc(db, 'skills', selectedSkillForVideos.id);
-      await setDoc(skillDocRef, { videoIds: updatedVideoIds }, { merge: true });
+      if (isE2ETestMode()) {
+        e2eUpdateSkill(selectedSkillForVideos.id, { videoIds: updatedVideoIds });
+      } else {
+        const skillDocRef = doc(db, 'skills', selectedSkillForVideos.id);
+        await setDoc(skillDocRef, { videoIds: updatedVideoIds }, { merge: true });
+      }
 
       await fetchData();
-      const updatedSkill = skills.find(s => s.id === selectedSkillForVideos.id);
+      const freshSkills = isE2ETestMode() ? e2eGetSkills() : skills;
+      const updatedSkill = freshSkills.find(s => s.id === selectedSkillForVideos.id);
       if (updatedSkill) {
         setSelectedSkillForVideos(updatedSkill);
       }
@@ -408,11 +480,16 @@ export default function AdminSkillsPage() {
       const updatedVideoIds = [...selectedSkillForVideos.videoIds];
       [updatedVideoIds[index], updatedVideoIds[index + 1]] = [updatedVideoIds[index + 1], updatedVideoIds[index]];
 
-      const skillDocRef = doc(db, 'skills', selectedSkillForVideos.id);
-      await setDoc(skillDocRef, { videoIds: updatedVideoIds }, { merge: true });
+      if (isE2ETestMode()) {
+        e2eUpdateSkill(selectedSkillForVideos.id, { videoIds: updatedVideoIds });
+      } else {
+        const skillDocRef = doc(db, 'skills', selectedSkillForVideos.id);
+        await setDoc(skillDocRef, { videoIds: updatedVideoIds }, { merge: true });
+      }
 
       await fetchData();
-      const updatedSkill = skills.find(s => s.id === selectedSkillForVideos.id);
+      const freshSkills = isE2ETestMode() ? e2eGetSkills() : skills;
+      const updatedSkill = freshSkills.find(s => s.id === selectedSkillForVideos.id);
       if (updatedSkill) {
         setSelectedSkillForVideos(updatedSkill);
       }
